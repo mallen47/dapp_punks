@@ -3,30 +3,33 @@ import { Container, Row, Col } from 'react-bootstrap';
 import Countdown from 'react-countdown';
 import { ethers } from 'ethers';
 
+// IMG
 import preview from '../preview.png';
 
 // Components
 import Navigation from './Navigation';
 import Data from './Data';
+import Mint from './Mint';
 import Loading from './Loading';
-import NFT_ABI from '../abis/NFT.json';
-import config from '../config.json';
 
 // ABIs: Import your contract ABIs here
-// import TOKEN_ABI from '../abis/Token.json'
+import NFT_ABI from '../abis/NFT.json';
 
 // Config: Import your network config here
-// import config from '../config.json';
+import config from '../config.json';
 
 function App() {
 	const [provider, setProvider] = useState(null);
 	const [nft, setNFT] = useState(null);
+
+	const [account, setAccount] = useState(null);
+
 	const [revealTime, setRevealTime] = useState(0);
 	const [maxSupply, setMaxSupply] = useState(0);
 	const [totalSupply, setTotalSupply] = useState(0);
 	const [cost, setCost] = useState(0);
 	const [balance, setBalance] = useState(0);
-	const [account, setAccount] = useState(null);
+
 	const [isLoading, setIsLoading] = useState(true);
 
 	const loadBlockchainData = async () => {
@@ -49,12 +52,20 @@ function App() {
 		const account = ethers.utils.getAddress(accounts[0]);
 		setAccount(account);
 
-		// Fetch countdown
+		// Fetch Countdown
 		const allowMintingOn = await nft.allowMintingOn();
 		setRevealTime(allowMintingOn.toString() + '000');
+
+		// Fetch maxSupply
 		setMaxSupply(await nft.maxSupply());
+
+		// Fetch totalSupply
 		setTotalSupply(await nft.totalSupply());
+
+		// Fetch cost
 		setCost(await nft.cost());
+
+		// Fetch account balance
 		setBalance(await nft.balanceOf(account));
 
 		setIsLoading(false);
@@ -78,21 +89,42 @@ function App() {
 				<>
 					<Row>
 						<Col>
-							<img src={preview} alt=''></img>
+							{console.log(`!!Balance --> ${balance}`)}
+							{balance > 0 ? (
+								<div className='text-center'>
+									<img
+										src={`https://gateway.pinata.cloud/ipfs/QmQPEMsfd1tJnqYPbnTQCjoa8vczfsV1FmqZWgRdNQ7z3g/${balance.toString()}.png`}
+										alt='Open Punk'
+										width='400px'
+										height='400px'
+									/>
+								</div>
+							) : (
+								<img src={preview} alt='' />
+							)}
 						</Col>
+
 						<Col>
 							<div className='my-4 text-center'>
 								<Countdown
 									date={parseInt(revealTime)}
 									className='h2'
-								></Countdown>
+								/>
 							</div>
+
 							<Data
 								maxSupply={maxSupply}
 								totalSupply={totalSupply}
 								cost={cost}
 								balance={balance}
-							></Data>
+							/>
+
+							<Mint
+								provider={provider}
+								nft={nft}
+								cost={cost}
+								setIsLoading={setIsLoading}
+							/>
 						</Col>
 					</Row>
 				</>
